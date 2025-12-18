@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,6 +12,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final SupabaseClient supabase = Supabase.instance.client;
+
   String? _publicImageUrl;
   bool _isUploading = false;
 
@@ -29,14 +31,14 @@ class _MyHomePageState extends State<MyHomePage> {
       final filePath = 'uploads/$fileName';
       final file = File(picked.path);
 
-      await supabase.storage.from('kampushub-images').upload(filePath, file);
+      await supabase.storage.from('bucket_images').upload(filePath, file);
 
-      final publicURL = supabase.storage
-          .from('kampushub-images')
-          .getPublicURL(filePath);
+      final publicUrl = supabase.storage
+          .from('bucket_images')
+          .getPublicUrl('uploads/$fileName');
 
       setState(() {
-        _publicImageUrl = publicURL;
+        _publicImageUrl = publicUrl;
       });
     } catch (e) {
       debugPrint('Error upload: $e');
