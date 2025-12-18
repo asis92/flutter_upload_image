@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -29,6 +30,23 @@ class _MyHomePageState extends State<MyHomePage> {
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${picked.name}';
       final filePath = 'uploads/$fileName';
+
+      if (kIsWeb) {
+        final bytes = await picked.readAsBytes();
+
+        await supabase.storage
+            .from('bucket_images')
+            .uploadBinary(
+              filePath,
+              bytes,
+              fileOptions: const FileOptions(contentType: 'image/png'),
+            );
+      } else {
+        final file = File(picked.path);
+
+        await supabase.storage.from('bucket_images').upload(filePath, file);
+      }
+
       final file = File(picked.path);
 
       await supabase.storage.from('bucket_images').upload(filePath, file);
