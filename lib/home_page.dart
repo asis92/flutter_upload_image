@@ -32,6 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
       final filePath = 'uploads/$fileName';
 
       if (kIsWeb) {
+        // 🌐 Flutter Web
         final bytes = await picked.readAsBytes();
 
         await supabase.storage
@@ -39,21 +40,28 @@ class _MyHomePageState extends State<MyHomePage> {
             .uploadBinary(
               filePath,
               bytes,
-              fileOptions: const FileOptions(contentType: 'image/png'),
+              fileOptions: FileOptions(
+                contentType: picked.mimeType ?? 'image/png',
+              ),
             );
       } else {
+        // 📱 Android / iOS
         final file = File(picked.path);
 
-        await supabase.storage.from('bucket_images').upload(filePath, file);
+        await supabase.storage
+            .from('bucket_images')
+            .upload(
+              filePath,
+              file,
+              fileOptions: FileOptions(
+                contentType: picked.mimeType ?? 'image/jpeg',
+              ),
+            );
       }
-
-      final file = File(picked.path);
-
-      await supabase.storage.from('bucket_images').upload(filePath, file);
 
       final publicUrl = supabase.storage
           .from('bucket_images')
-          .getPublicUrl('uploads/$fileName');
+          .getPublicUrl(filePath);
 
       setState(() {
         _publicImageUrl = publicUrl;
@@ -63,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("Gagal Upload : $e")));
+        ).showSnackBar(SnackBar(content: Text("Gagal Upload: $e")));
       }
     } finally {
       if (mounted) {
